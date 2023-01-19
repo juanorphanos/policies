@@ -1,0 +1,96 @@
+{
+ "properties": {
+  "displayName": "Configure Defender for SQL based on tags",
+  "policyType": "Custom",
+  "mode": "Indexed",
+  "metadata": {
+   "category": "BCI",
+   "createdBy": "829695b4-1850-43da-a88e-aba291a198ee",
+   "createdOn": "2023-01-12T12:25:10.4909939Z",
+   "updatedBy": null,
+   "updatedOn": null
+  },
+  "parameters": {
+   "inclusionTagName": {
+    "type": "String",
+    "metadata": {
+     "displayName": "Inclusion Tag Name",
+     "description": "Name of the tag to use."
+    },
+    "defaultValue": "Ambiente"
+   },
+   "inclusionTagValue": {
+    "type": "Array",
+    "metadata": {
+     "displayName": "Inclusion Tag Values",
+     "description": "Value of the tag to use."
+    }
+   }
+  },
+  "policyRule": {
+   "if": {
+    "allOf": [
+     {
+      "field": "type",
+      "equals": "Microsoft.Sql/servers"
+     },
+     {
+      "field": "kind",
+      "notContains": "analytics"
+     },
+     {
+      "field": "[concat('tags[', parameters('inclusionTagName'), ']')]",
+      "in": "[parameters('inclusionTagValue')]"
+     }
+    ]
+   },
+   "then": {
+    "effect": "deployIfNotExists",
+    "details": {
+     "type": "Microsoft.Sql/servers/securityAlertPolicies",
+     "name": "Default",
+     "existenceCondition": {
+      "field": "Microsoft.Sql/securityAlertPolicies.state",
+      "equals": "Enabled"
+     },
+     "roleDefinitionIds": [
+      "/providers/microsoft.authorization/roleDefinitions/056cd41c-7e88-42e1-933e-88ba6a50c9c3"
+     ],
+     "deployment": {
+      "properties": {
+       "mode": "incremental",
+       "template": {
+        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+         "serverName": {
+          "type": "string"
+         }
+        },
+        "variables": {},
+        "resources": [
+         {
+          "name": "[concat(parameters('serverName'), '/Default')]",
+          "type": "Microsoft.Sql/servers/securityAlertPolicies",
+          "apiVersion": "2020-11-01-preview",
+          "properties": {
+           "state": "Enabled"
+          }
+         }
+        ]
+       },
+       "parameters": {
+        "serverName": {
+         "value": "[field('name')]"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "id": "/providers/Microsoft.Management/managementGroups/fa02631d-7704-400a-b0fd-f5dbf8f302f8/providers/Microsoft.Authorization/policyDefinitions/9bea1368-ea9a-43a8-a5cd-32ceccf4bccc",
+ "type": "Microsoft.Authorization/policyDefinitions",
+ "name": "9bea1368-ea9a-43a8-a5cd-32ceccf4bccc"
+}
